@@ -1,0 +1,39 @@
+# Dependências
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.production
+
+# Builds
+dist/
+build/
+frontend/dist/
+backend/dist/
+
+# Banco de dados SQLite (local)
+*.db
+*.db-journal
+prisma/*.db
+prisma/*.db-journal
+
+# Uploads (imagens, etc.)
+uploads/
+backend/uploads/
+
+# Logs
+*.log
+logs/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

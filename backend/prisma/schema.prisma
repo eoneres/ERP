@@ -1,0 +1,406 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Usuários do sistema
+model Usuario {
+  id           Int       @id @default(autoincrement())
+  nome         String
+  email        String    @unique
+  senha        String
+  telefone     String?
+  ativo        Boolean   @default(true)
+  ultimoAcesso DateTime?
+  bloqueadoAte DateTime?
+  perfilId     Int
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  perfil                Perfil                @relation(fields: [perfilId], references: [id])
+  agendamentosMecanico  Agendamento[]         @relation("MecanicoAgendamentos")
+  ordensServicoMecanico OrdemServico[]        @relation("MecanicoOrdens")
+  movimentacoes         MovimentacaoEstoque[]
+  refreshTokens         RefreshToken[]
+  tentativasLogin       TentativaLogin[]
+  passwordResetTokens   PasswordResetToken[]
+  servicosExecutados    ServicoOS[]           @relation("MecanicoServicos")
+
+  @@map("usuarios")
+}
+
+// Perfis de acesso
+model Perfil {
+  id         Int       @id @default(autoincrement())
+  nome       String    @unique // ADMIN, ATENDENTE, MECANICO
+  descricao  String?
+  permissoes String? // Guarda permissões específicas em formato JSON string
+  usuarios   Usuario[]
+
+  @@map("perfis")
+}
+
+// Clientes
+model Cliente {
+  id              Int       @id @default(autoincrement())
+  tipo            String    @default("FISICA") // FISICA, JURIDICA
+  nome            String    // Razão social para PJ
+  nomeFantasia    String?
+  documento       String    @unique // CPF ou CNPJ (sem pontuação)
+  rg              String?
+  inscricaoEstadual String?
+  dataNascimento  DateTime?
+  telefone1       String
+  telefone2       String?
+  email           String?
+  cep             String?
+  endereco        String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+  cidade          String?
+  uf              String?
+  observacoes     String?
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  veiculos        Veiculo[]
+  ordensServico   OrdemServico[]
+  agendamentos    Agendamento[]
+
+  @@map("clientes")
+}
+
+// Veículos
+model Veiculo {
+  id            Int      @id @default(autoincrement())
+  placa         String   @unique
+  renavam       String?
+  chassi        String?
+  marca         String
+  modelo        String
+  anoFabricacao Int
+  anoModelo     Int
+  cor           String?
+  combustivel   String? // GASOLINA, ETANOL, FLEX, DIESEL, ELETRICO
+  cambio        String? // MANUAL, AUTOMATICO
+  kmAtual       Int      @default(0)
+  clienteId     Int
+  observacoes   String?
+  ativo         Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  cliente       Cliente        @relation(fields: [clienteId], references: [id])
+  ordensServico OrdemServico[]
+  agendamentos  Agendamento[]
+  historicoKm   HistoricoKm[]
+
+  @@map("veiculos")
+}
+
+// Agendamentos
+model Agendamento {
+  id              Int       @id @default(autoincrement())
+  dataHora        DateTime
+  clienteId       Int
+  veiculoId       Int
+  servicos        String    // Lista de serviços solicitados em formato JSON string
+  observacoes     String?
+  status          String    @default("PENDENTE") // PENDENTE, CONFIRMADO, EM_ANDAMENTO, CONCLUIDO, CANCELADO
+  mecanicoId      Int?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  cliente         Cliente   @relation(fields: [clienteId], references: [id])
+  veiculo         Veiculo   @relation(fields: [veiculoId], references: [id])
+  mecanico        Usuario?  @relation("MecanicoAgendamentos", fields: [mecanicoId], references: [id])
+  ordemServico    OrdemServico?
+
+  @@map("agendamentos")
+}
+
+// Ordens de Serviço
+model OrdemServico {
+  id                    Int       @id @default(autoincrement())
+  numero                String    @unique
+  clienteId             Int
+  veiculoId             Int
+  kmEntrada             Int
+  kmSaida               Int?
+  dataAbertura          DateTime  @default(now())
+  dataFechamento        DateTime?
+  status                String    @default("ABERTA") // ABERTA, AGUARDANDO_APROVACAO, APROVADA, EM_EXECUCAO, CONCLUIDA, ENTREGUE, CANCELADA
+  tipo                  String    @default("SERVICO") // SERVICO, ORCAMENTO
+  observacoes           String?
+  mecanicoResponsavelId Int?
+  agendamentoId         Int?      @unique
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  cliente     Cliente      @relation(fields: [clienteId], references: [id])
+  veiculo     Veiculo      @relation(fields: [veiculoId], references: [id])
+  mecanico    Usuario?     @relation("MecanicoOrdens", fields: [mecanicoResponsavelId], references: [id])
+  agendamento Agendamento? @relation(fields: [agendamentoId], references: [id])
+  servicos    ServicoOS[]
+  pecas       PecaOS[]
+  fotos       FotoOS[]
+  financeiro  Financeiro[]
+
+  @@map("ordens_servico")
+}
+
+// Serviços da OS
+model ServicoOS {
+  id             Int      @id @default(autoincrement())
+  ordemServicoId Int
+  descricao      String
+  valorUnitario  Float
+  quantidade     Int      @default(1)
+  desconto       Float    @default(0)
+  total          Float
+  status         String   @default("PENDENTE") // PENDENTE, EM_ANDAMENTO, CONCLUIDO
+  mecanicoId     Int?
+  observacoes    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  ordemServico OrdemServico @relation(fields: [ordemServicoId], references: [id])
+  mecanico     Usuario?     @relation("MecanicoServicos", fields: [mecanicoId], references: [id])
+
+  @@map("servicos_os")
+}
+
+// Peças da OS
+model PecaOS {
+  id             Int      @id @default(autoincrement())
+  ordemServicoId Int
+  pecaId         Int
+  quantidade     Int
+  valorUnitario  Float
+  desconto       Float    @default(0)
+  total          Float
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  ordemServico OrdemServico @relation(fields: [ordemServicoId], references: [id])
+  peca         Peca         @relation(fields: [pecaId], references: [id])
+
+  @@map("pecas_os")
+}
+
+// Fotos da OS
+model FotoOS {
+  id             Int      @id @default(autoincrement())
+  ordemServicoId Int
+  tipo           String // ENTRADA, DURANTE, SAIDA, PROBLEMA
+  url            String
+  descricao      String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  ordemServico OrdemServico @relation(fields: [ordemServicoId], references: [id])
+
+  @@map("fotos_os")
+}
+
+// Catálogo de Peças
+model Peca {
+  id              Int       @id @default(autoincrement())
+  codigo          String    @unique
+  codigoFabricante String?
+  descricao       String
+  categoria       String?
+  marca           String?
+  aplicacao       String?   // Quais veículos são compatíveis
+  localizacao     String?   // Local no estoque
+  estoqueMinimo   Int       @default(0)
+  estoqueMaximo   Int       @default(0)
+  estoqueAtual    Int       @default(0)
+  precoCusto      Float
+  precoVenda      Float
+  margemLucro     Float?    // Calculado
+  fornecedorId    Int?
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  fornecedor      Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  movimentacoes   MovimentacaoEstoque[]
+  pecasOS         PecaOS[]
+
+  @@map("pecas")
+}
+
+// Fornecedores
+model Fornecedor {
+  id              Int       @id @default(autoincrement())
+  razaoSocial     String
+  nomeFantasia    String?
+  cnpj            String    @unique
+  inscricaoEstadual String?
+  telefone1       String
+  telefone2       String?
+  email           String?
+  contato         String?   // Nome do contato
+  cep             String?
+  endereco        String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+  cidade          String?
+  uf              String?
+  observacoes     String?
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  pecas           Peca[]
+  financeiro Financeiro[]
+
+  @@map("fornecedores")
+}
+
+// Movimentação de Estoque
+model MovimentacaoEstoque {
+  id              Int       @id @default(autoincrement())
+  pecaId          Int
+  tipo            String    // ENTRADA, SAIDA, AJUSTE
+  quantidade      Int
+  motivo          String?   // VENDA, PERDA, INVENTARIO, etc
+  documento       String?   // NF, OS, etc
+  observacoes     String?
+  usuarioId       Int
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  // Relacionamentos
+  peca            Peca      @relation(fields: [pecaId], references: [id])
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id])
+
+  @@map("movimentacoes_estoque")
+}
+
+// Financeiro
+model Financeiro {
+  id              Int       @id @default(autoincrement())
+  ordemServicoId  Int?
+  tipo            String    // RECEITA, DESPESA
+  formaPagamento  String    // DINHEIRO, CARTAO_DEBITO, CARTAO_CREDITO, PIX, BOLETO, TRANSFERENCIA
+  parcelas        Int       @default(1)
+  valorTotal      Float
+  valorPago       Float     @default(0)
+  status          String    @default("PENDENTE") // PENDENTE, PARCIAL, PAGO, CANCELADO
+  dataVencimento  DateTime
+  dataPagamento   DateTime?
+  descricao       String?   // para despesas
+  categoria       String?   // para despesas
+  fornecedorId    Int?
+  observacoes     String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  ordemServico    OrdemServico? @relation(fields: [ordemServicoId], references: [id])
+  fornecedor      Fornecedor?   @relation(fields: [fornecedorId], references: [id])
+
+  @@map("financeiro")
+}
+
+// Refresh Tokens para manter sessão
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  usuarioId Int
+  expiraEm  DateTime
+  revogado  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("refresh_tokens")
+}
+
+// Tentativas de login (para segurança)
+model TentativaLogin {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int?
+  ip        String?
+  userAgent String?
+  sucesso   Boolean
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@map("tentativas_login")
+}
+
+// Tokens para reset de senha
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  usuarioId Int
+  expiraEm  DateTime
+  utilizado Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("password_reset_tokens")
+}
+
+// Histórico de Quilometragem
+model HistoricoKm {
+  id           Int      @id @default(autoincrement())
+  veiculoId    Int
+  kmAnterior   Int
+  kmNovo       Int
+  observacao   String?
+  dataRegistro DateTime @default(now())
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  veiculo Veiculo @relation(fields: [veiculoId], references: [id])
+
+  @@map("historico_km")
+}
+
+// Configurações da Empresa
+model Empresa {
+  id                       Int       @id @default(autoincrement())
+  nome                     String?
+  nomeFantasia             String?
+  logoUrl                  String?
+  cnpj                     String?
+  inscricaoEstadual        String?
+  telefone                 String?
+  email                    String?
+  endereco                 String?
+  numero                   String?
+  complemento              String?
+  bairro                   String?
+  cidade                   String?
+  uf                       String?
+  cep                      String?
+  // Parâmetros do sistema
+  impostoIss               Float?    @default(0)
+  impostoIcms              Float?    @default(0)
+  comissaoMecanico         Float?    @default(0)
+  toleranciaCancelamentoHoras Int?   @default(2)
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  @@map("empresa")
+}
