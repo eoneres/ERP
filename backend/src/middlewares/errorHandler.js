@@ -24,7 +24,6 @@ const errorHandler = (err, req, res, next) => {
         }
     }
 
-    // Erro padrão
     const status = err.status || 500;
     const message = err.message || 'Erro interno do servidor';
 

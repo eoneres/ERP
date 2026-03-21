@@ -2,7 +2,7 @@ const app = require('./app');
 const config = require('./config/env');
 const logger = require('./utils/logger');
 
-const PORT = config.port || 3333;
+const PORT = config.port || 3334;
 
 const server = app.listen(PORT, () => {
     logger.info(`🚀 Servidor rodando na porta ${PORT}`);
@@ -23,7 +23,7 @@ process.on('uncaughtException', (error) => {
     process.exit(1);
 });
 
-process.on('unhandledRejection', (error) => {
-    logger.error('Promise rejeitada não capturada:', error);
+process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Promise rejeitada não capturada:', reason);
     process.exit(1);
 });

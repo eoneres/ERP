@@ -1,5 +1,5 @@
 const express = require('express');
-const cors = require('cors');  // ← APENAS UMA VEZ!
+const cors = require('cors');
 const path = require('path');
 const config = require('./config/env');
 const logger = require('./utils/logger');
@@ -21,18 +21,16 @@ const empresaRoutes = require('./features/empresa/routes');
 
 const app = express();
 
-// Configuração CORS - UMA VEZ
+// Middlewares globais
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: config.corsOrigin,
     credentials: true
 }));
-
-// Middlewares globais
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Arquivos estáticos
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Arquivos estáticos (uploads)
+app.use('/uploads', express.static(path.join(__dirname, '../', config.uploadDir)));
 
 // Logger de requisições
 app.use((req, res, next) => {
@@ -54,7 +52,7 @@ app.use('/api/relatorios', relatoriosRoutes);
 app.use('/api/configuracoes', configuracoesRoutes);
 app.use('/api/empresa', empresaRoutes);
 
-// Rota de saúde
+// Rota de saúde (útil para monitoramento)
 app.get('/health', (req, res) => {
     res.json({
         status: 'ok',
