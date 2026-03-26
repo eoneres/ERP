@@ -169,7 +169,7 @@ Este projeto está sob a licença MIT. Veja o arquivo (LICENSE) para mais detalh
 
 ## 👨‍💻 Autor
 
-**Seu Nome**
+**Filipe Neres Fernandes**
 - LinkedIn: linkedin.com/in/filipe-neres-fernandes-9878b018b
 - GitHub: github.com/eoneres
 
