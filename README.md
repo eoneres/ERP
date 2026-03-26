@@ -1,7 +1,5 @@
 # Sistema de Gestão Geral (Oficina Mecânica)
 
-![Dashboard](screenshots/dashboard.png)
-
 Sistema web completo para gerenciamento de oficinas mecânicas, desenvolvido com foco em usabilidade, escalabilidade e boas práticas de desenvolvimento.
 
 ## 🚀 Funcionalidades
