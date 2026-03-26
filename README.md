@@ -8,11 +8,11 @@
 
 ## 📋 Sobre o Projeto
 
-Sistema web completo para gestão de oficinas mecânicas, desenvolvido com foco em usabilidade, eficiência operacional e controle financeiro. A plataforma centraliza todas as atividades do negócio em um único ambiente, eliminando planilhas e cadernos, e proporcionando uma visão clara e em tempo real do desempenho da oficina.
+Sistema web completo para gestão utilizando como base oficinas mecânicas, desenvolvido com foco em usabilidade, eficiência operacional e controle financeiro. A plataforma centraliza todas as atividades do negócio em um único ambiente, eliminando planilhas e cadernos, e proporcionando uma visão clara e em tempo real do desempenho do negócio.
 
 ### 🎯 Problema Resolvido
 
-Oficinas mecânicas enfrentam desafios diários de organização: controle de clientes, histórico de serviços, gestão de estoque de peças, controle financeiro, agendamentos e ordens de serviço. Este sistema unifica todas essas áreas, reduzindo erros manuais, otimizando o tempo da equipe e melhorando a experiência do cliente.
+Pequenos negócios enfrentam desafios diários de organização: controle de clientes, histórico de serviços, gestão de estoque, controle financeiro, agendamentos e ordens de serviço. Este sistema unifica todas essas áreas, reduzindo erros manuais, otimizando o tempo da equipe e melhorando a experiência do cliente.
 
 ### ✨ Funcionalidades
 
